@@ -1,0 +1,47 @@
+.hextra-table {
+  text-align: center;
+  margin: auto;
+  font-family: 'Roboto Mono', sans-serif;
+}
+.hextra-table .search-control{
+	height: 1.7em;
+	font-size: inherit;
+}
+.hextra-table .nav-item{
+	border-right-color: #a9a9a914;
+    border-right-width: 1px;
+    border-right-style: solid;
+}
+.hextra-table .dropdown-menu {
+	font-size: inherit;
+}
+.hextra-table a {
+	cursor: pointer;
+}
+.hextra-table .file-pos{
+	background-color: #66b0f3;
+	text-shadow:
+   -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+     1px 1px 0 #000;
+}
+.hextra-table tr:nth-child(2n) > th.file-pos:nth-child(1) {
+	background-color: #4678a2;
+}
+.hextra-table .top-header{
+	padding: 0 !important;
+}
+.hextra-table .hextra-file-menu {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+	font-size: inherit;
+}
+.hextra-table td, .hextra-table th{
+    padding: .22rem !important;
+}
+
+.hextra-table .hextra-logo{
+    height:auto;
+    max-width: 2.5%;
+}
