@@ -25,7 +25,7 @@ The focus will initially be on basic features and then will branch out to SNES/S
 * customizable script editing components
 * customizable tile editor
 * file diff and comparison
-* hextra main methods must be converted to a class
+* ~~hextra main methods must be converted to a class~~ 4/18
 
 
 This work is licensed under a

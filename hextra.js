@@ -92,22 +92,22 @@ const hextra_template = `
 const hextra_row_template = `
 <tr class="hex-row" id="hxr_{17}">
   <th scope="row" class="file-pos">{0}</th>
-  <td id="hxc_{17}" onkeydown="return hxKeyDown(event)" contenteditable="true">{1}</td>
-  <td id="hxc_{18}" onkeydown="return hxKeyDown(event)" contenteditable="true">{2}</td>
-  <td id="hxc_{19}" onkeydown="return hxKeyDown(event)" contenteditable="true">{3}</td>
-  <td id="hxc_{20}" onkeydown="return hxKeyDown(event)" contenteditable="true">{4}</td>
-  <td id="hxc_{21}" onkeydown="return hxKeyDown(event)" contenteditable="true">{5}</td>
-  <td id="hxc_{22}" onkeydown="return hxKeyDown(event)" contenteditable="true">{6}</td>
-  <td id="hxc_{23}" onkeydown="return hxKeyDown(event)" contenteditable="true">{7}</td>
-  <td id="hxc_{24}" onkeydown="return hxKeyDown(event)" contenteditable="true">{8}</td>
-  <td id="hxc_{25}" onkeydown="return hxKeyDown(event)" contenteditable="true">{9}</td>
-  <td id="hxc_{26}" onkeydown="return hxKeyDown(event)" contenteditable="true">{10}</td>
-  <td id="hxc_{27}" onkeydown="return hxKeyDown(event)" contenteditable="true">{11}</td>
-  <td id="hxc_{28}" onkeydown="return hxKeyDown(event)" contenteditable="true">{12}</td>
-  <td id="hxc_{29}" onkeydown="return hxKeyDown(event)" contenteditable="true">{13}</td>
-  <td id="hxc_{30}" onkeydown="return hxKeyDown(event)" contenteditable="true">{14}</td>
-  <td id="hxc_{31}" onkeydown="return hxKeyDown(event)" contenteditable="true">{15}</td>
-  <td id="hxc_{32}" onkeydown="return hxKeyDown(event)" contenteditable="true">{16}</td>
+  <td id="hxc_{17}" class="hex-col" contenteditable="true">{1}</td>
+  <td id="hxc_{18}" class="hex-col" contenteditable="true">{2}</td>
+  <td id="hxc_{19}" class="hex-col" contenteditable="true">{3}</td>
+  <td id="hxc_{20}" class="hex-col" contenteditable="true">{4}</td>
+  <td id="hxc_{21}" class="hex-col" contenteditable="true">{5}</td>
+  <td id="hxc_{22}" class="hex-col" contenteditable="true">{6}</td>
+  <td id="hxc_{23}" class="hex-col" contenteditable="true">{7}</td>
+  <td id="hxc_{24}" class="hex-col" contenteditable="true">{8}</td>
+  <td id="hxc_{25}" class="hex-col" contenteditable="true">{9}</td>
+  <td id="hxc_{26}" class="hex-col" contenteditable="true">{10}</td>
+  <td id="hxc_{27}" class="hex-col" contenteditable="true">{11}</td>
+  <td id="hxc_{28}" class="hex-col" contenteditable="true">{12}</td>
+  <td id="hxc_{29}" class="hex-col" contenteditable="true">{13}</td>
+  <td id="hxc_{30}" class="hex-col" contenteditable="true">{14}</td>
+  <td id="hxc_{31}" class="hex-col" contenteditable="true">{15}</td>
+  <td id="hxc_{32}" class="hex-col" contenteditable="true">{16}</td>
 </tr>`;
 
 $('head').append(`<link rel="stylesheet" href="hextra-style.css">`);
@@ -120,28 +120,6 @@ if (typeof $().emulateTransitionEnd !== 'function') {  // bootstrap is not loade
 
 if (typeof bootbox == "undefined") { // load bootbox...
     $.getScript("https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/5.5.2/bootbox.min.js");
-}
-
-function toHex(number, padding=null) {
-    let hex = Number(number).toString(16).toUpperCase();
-    padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
-    while (hex.length < padding) {
-        hex = "0" + hex;
-    }
-    return hex;
-}
-
-function check_kwargs(defaults, kwargs){
-    /*
-        essentially merges the default kwargs with the provided kwargs (in dictionary form)
-    */
-    let final_kwargs = (kwargs === null) ? {} : kwargs;
-    for (let key in defaults){
-        if (!(key in final_kwargs)){
-            final_kwargs[key] = defaults[key];
-        }
-    }
-    return final_kwargs;
 }
 
 function showhextraAbout(){
@@ -157,216 +135,222 @@ Using the following open source projects:<br>
     });
 }
 
-function hextra(...arguments){
-    let defaults = {
-        container: null,
-        font_min: .5, // in rem units
-        font_max: 2.2,
-        min_width: 450, // in pixels
-        max_width: 2048,
-        auto_size_steps: 100, // number of steps in the font resize ramp
-        sticky_headers: true,
-        default_file_length: 512, // in bytes
-        dynamic_resize: true,
-        load_font: true,
-    };
-    let options = {};
-    if (arguments.length === 1){
-        if (arguments[0].constructor === Object) {
-            // evaluate kwargs options dictionary
-            options = check_kwargs(defaults, arguments[0]);
-        }else{
-            options.container = arguments[0];
-            options = check_kwargs(defaults, options);
+var HextraHelper = function() {}
+// Helper "class" for getting and setting the caret position
+HextraHelper.setCaretPos = function(element, position){
+    let setpos = document.createRange();  // Creates range object
+    let set = window.getSelection();  // Creates object for selection
+
+    setpos.setStart(element.childNodes[0], position);  // Set start position of range
+
+    setpos.collapse(true);  // Collapse range within its boundary points
+    set.removeAllRanges();  // Remove all ranges set
+
+    set.addRange(setpos);  // Add range with respect to range object.
+    element.focus();  // Set cursor on focus
+}
+HextraHelper.getCaretPos = function(element){
+    let caretPos = 0, sel, range;
+    if (window.getSelection) {
+        sel = window.getSelection();
+        if (sel.rangeCount) {
+            range = sel.getRangeAt(0);
+            if (range.commonAncestorContainer.parentNode === element) {
+                caretPos = range.endOffset;
+            }
         }
-    }else if (arguments.length > 1){
-        if (arguments[1].constructor === Object) {
-            // evaluate kwargs
-            options = check_kwargs(defaults, arguments[1]);
-        }else{
-            throw "hextra Error: Second argument must be an options dictionary."
+    } else if (document.selection && document.selection.createRange) {
+        range = document.selection.createRange();
+        if (range.parentElement() === element) {
+            let tempEl = document.createElement("span");
+            element.insertBefore(tempEl, element.firstChild);
+            let tempRange = range.duplicate();
+            tempRange.moveToElementText(tempEl);
+            tempRange.setEndPoint("EndToEnd", range);
+            caretPos = tempRange.text.length;
         }
-    }else{
-        throw "hextra Error: Options or arguments must be supplied."
     }
-    if (options.container == null) throw "hextra Error: The container parameter is required."
-
-    let data_rows = '';
-    for (let c=0; c<options.default_file_length; c+=16){
-        data_rows += hextra_row_template.format(toHex(c, 12),
-            '00','00','00','00','00','00','00','00','00','00','00','00','00','00','00','00',
-            c, c+1, c+2, c+3, c+4, c+5, c+6, c+7, c+8, c+9, c+10, c+11, c+12, c+13, c+14, c+15);
+    return caretPos;
+}
+HextraHelper.setCharAtIndex = function(inString, index, char){
+    if(index > inString.length-1) return inString;
+    return inString.substring(0,index) + char + inString.substring(index+1);
+}
+HextraHelper.toHex = function(number, padding=null) {
+    let hex = Number(number).toString(16).toUpperCase();
+    padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
+    while (hex.length < padding) {
+        hex = "0" + hex;
     }
+    return hex;
+}
 
-    $(`${options.container}`).html(hextra_template.format(data_rows));
+class Hextra {
+    constructor() {
+        this.container = null;
+        this.font_min = .5; // in rem units
+        this.font_max = 2.2;
+        this.min_width = 450; // in pixels
+        this.max_width = 2048;
+        this.auto_size_steps = 100; // number of steps in the font resize ramp
+        this.sticky_headers = true;
+        this.default_file_length = 512; // in bytes
+        this.dynamic_resize = true;
+        this.load_font = true;
+        this.delete_value = 0;
 
-    if (options.load_font && !hextra_roboto_loaded) {
+        if (arguments.length === 1){
+            if (arguments[0].constructor === Object) {
+                // evaluate kwargs options dictionary
+                Object.assign(this, arguments[0]);
+            }else{
+                Object.assign(this, {container: arguments[0]});
+            }
+        }else if (arguments.length > 1){
+            if (arguments[1].constructor === Object) {
+                // evaluate kwargs
+                Object.assign(this, arguments[1]);
+            }else{
+                throw "hextra Error: Second argument must be an options dictionary."
+            }
+        }else{
+            throw "hextra Error: Options or arguments must be supplied."
+        }
+        if (this.container == null) throw "hextra Error: The container parameter is required."
+
+        let data_rows = '';
+        for (let c=0; c<this.default_file_length; c+=16){
+            data_rows += hextra_row_template.format(HextraHelper.toHex(c, 12),
+                '00','00','00','00','00','00','00','00','00','00','00','00','00','00','00','00',
+                c, c+1, c+2, c+3, c+4, c+5, c+6, c+7, c+8, c+9, c+10, c+11, c+12, c+13, c+14, c+15);
+        }
+
+        $(`${this.container}`).html(hextra_template.format(data_rows));
+
+        if (this.load_font && !hextra_roboto_loaded) {
             hextra_roboto_loaded = true;
             $('head').append(`
             <link rel="preconnect" href="https://fonts.gstatic.com">
             <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">`);
+        }
+
+        if (this.sticky_headers) {
+            if (!hextra_sticky_headers_loaded) {
+                hextra_sticky_headers_loaded = true;
+                $.getScript("https://unpkg.com/sticky-table-headers@0.1.24/js/jquery.stickytableheaders.min.js");
+            }
+            let container = this.container;
+            setTimeout(function () {
+                $(`${container} .hextra-table`).stickyTableHeaders();
+            }, 1000);
+        }
+
+        // Set the dynamic ui font resize style rules
+        if (!this.dynamic_resize) this.font_max = 0;
+        else if (!hextra_prolyfill_loaded) {
+            hextra_prolyfill_loaded = true;
+            $.getScript("./cq-prolyfill.min.js");
+        }
+        // either set the billions of style rules, or just set a static size
+        this.initFontSize();
+
+        // remove the pedantic cell selection code... selection is handled elsewhere. Handle keydown.
+        $(`${this.container} .hex-col`).attr('unselectable', 'on')
+            .css('user-select', 'none').on('selectstart', false).on('keydown', this.hxKeyDown);
     }
 
-    if (options.sticky_headers) {
-        if (!hextra_sticky_headers_loaded) {
-            hextra_sticky_headers_loaded = true;
-            $.getScript("https://unpkg.com/sticky-table-headers@0.1.24/js/jquery.stickytableheaders.min.js");
+    hxKeyDown(e) {
+        let target = $(e.target);
+        let index = int(target.attr('id').split('_')[1]);
+        let next_elem = $(`#hxc_${index + 1}`);
+        let prev_elem = $(`#hxc_${index - 1}`);
+        let keycode = e.keyCode;
+        let pos = HextraHelper.getCaretPos(e.target);
+        let shift = e.shiftKey;
+        console.log(keycode, e);
+
+        let is_allowed = (keycode > 47 && keycode < 58) ||  // top-row numbers
+            (keycode > 95 && keycode < 112) || // numpad
+            (keycode > 64 && keycode < 71);  // allowed letters a-f
+
+        let is_nav = (keycode > 32 && keycode < 41) || keycode === 9;
+
+        if (is_allowed) {
+            if (pos === 2){
+                let next_str = HextraHelper.setCharAtIndex(next_elem.text(), 0, String.fromCharCode(keycode));
+                next_elem.text(next_str);
+                HextraHelper.setCaretPos(next_elem.get(0), 1);
+            }else{
+                let new_str = HextraHelper.setCharAtIndex(target.text(), pos, String.fromCharCode(keycode));
+                target.text(new_str);
+                HextraHelper.setCaretPos(target.get(0), pos + 1);
+            }
+        } else if (is_nav){
+            let scroll_elem = null;
+            if (keycode === 37 && pos === 0 && prev_elem.length) {
+                scroll_elem = prev_elem.get(0);
+                HextraHelper.setCaretPos(scroll_elem, 2);}  // left
+            else if (keycode === 37) { return true; }  // left
+            else if (keycode === 39 && pos === 2 && next_elem.length ) {
+                scroll_elem = next_elem.get(0);
+                HextraHelper.setCaretPos(scroll_elem, 0);}  // right
+            else if (keycode === 39){ return true; }
+            else if (keycode === 9 && shift && prev_elem.length) {
+                scroll_elem = prev_elem.get(0);
+                HextraHelper.setCaretPos(scroll_elem, pos);
+            }
+            else if (keycode === 9 && next_elem.length) {
+                scroll_elem = next_elem.get(0);
+                HextraHelper.setCaretPos(scroll_elem, pos);
+            }
+            else if (keycode === 38){ // up keypress
+                let top_elem = $(`#hxc_${index - 16}`);
+                if (top_elem.length) {
+                    scroll_elem = top_elem.get(0);
+                    HextraHelper.setCaretPos(scroll_elem, pos);
+                } else { scroll_elem = e.target; }  // still make sure the current column is visible
+            }
+            else if (keycode === 40){ // down keypress
+                let bot_elem = $(`#hxc_${index + 16}`);
+                if (bot_elem.length) {
+                    scroll_elem = bot_elem.get(0);
+                    HextraHelper.setCaretPos(scroll_elem, pos);
+                } else { scroll_elem = e.target; }  // make sure the current column is on the screen
+            }
+            else if(keycode>32&&keycode<37){  // page up/down home/end
+                return true;
+            }
+
+            if (scroll_elem){
+                scroll_elem.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+            }
         }
-        setTimeout(function () {
-            $(`${options.container} .hextra-table`).stickyTableHeaders();
-        }, 500);
+        return false;
     }
 
-    // Set the dynamic ui font resize style rules
-    if (!options.dynamic_resize) options.font_max = 0;
-    else if (!hextra_prolyfill_loaded) {
-        hextra_prolyfill_loaded = true;
-        $.getScript("./cq-prolyfill.min.js");
+    initFontSize(){
+        let options = this;
+        console.log(options);
+        let styles = `${options.container}>table {font-size: ${options.font_min}rem;}`;
+
+        if (!(options.font_min  === options.font_max || options.max_width === 0)){
+            let rem_change = (options.font_max - options.font_min) / options.auto_size_steps;
+            let res_change = (options.max_width - options.min_width) / options.auto_size_steps;
+            let this_rem = options.font_min + rem_change;
+            let this_res = options.min_width;
+            console.log(rem_change, res_change, this_rem, this_res);
+            for (let c=0; c<=options.auto_size_steps;c++){
+                styles += `
+                ${options.container}>table[data-cq~="min-width:${this_res}px"] {font-size: ${this_rem}rem;}`;
+                this_res+= res_change;
+                this_rem+= rem_change;
+            }
+        }
+
+        let style_container = str(options.container).replace(
+            '-', '_').replace(
+                ".", "").replace(
+                    "#", "") + "_styles";
+        $('head').append(`<style id="${style_container}">${styles}</style>`);
     }
-
-    setFontSize(options.container, options.font_min, options.font_max,
-        options.auto_size_steps, options.min_width, options.max_width);
-}
-
-function setFontSize(container, min_rem, max_rem=2.2, steps=100, min_res_px=450, max_res_px=2048){
-    let styles = '';
-    if (min_rem === max_rem || max_rem === 0){
-        styles += `${container}>table {font-size: ${min_rem}rem;}`;
-    }else{
-        styles += `${container}>table {font-size: ${min_rem}rem;}`;
-        let rem_change = (max_rem - min_rem) / steps;
-        let res_change = (max_res_px - min_res_px) / steps;
-        let this_rem = min_rem + rem_change;
-        let this_res = min_res_px;
-        for (let c=0; c<=steps;c++){
-            styles += `${container}>table[data-cq~="min-width:${this_res}px"] {font-size: ${this_rem}rem;}`;
-            this_res+= res_change;
-            this_rem+= rem_change;
-        }
-    }
-    $('head').append(`<style>${styles}</style>`);
-}
-
-function hxKeyDown(e) {
-    let target = $(e.target);
-    let index = int(target.attr('id').split('_')[1]);
-    let next_elem = $(`#hxc_${index + 1}`);
-    let prev_elem = $(`#hxc_${index - 1}`);
-    let keycode = e.keyCode;
-    let pos = getCaretPosition(e.target);
-    let shift = e.shiftKey;
-    console.log(keycode, e);
-
-    let printable =
-        (keycode > 47 && keycode < 58)   || // number keys
-        keycode === 32 || keycode === 13   || // spacebar & return key(s) (if you want to allow carriage returns)
-        (keycode > 64 && keycode < 91)   || // letter keys
-        (keycode > 95 && keycode < 112)  || // numpad keys
-        (keycode > 185 && keycode < 193) || // ;=,-./` (in order)
-        (keycode > 218 && keycode < 223);   // [\]' (in order)
-
-    let is_allowed = (keycode > 47 && keycode < 58) ||  // top-row numbers
-        (keycode > 95 && keycode < 112) || // numpad
-        (keycode > 64 && keycode < 71);  // allowed letters a-f
-
-    let is_nav = (keycode > 36 && keycode < 41) || keycode === 9;
-
-    if (is_allowed) {
-        if (pos === 2){
-            let next_str = setCharAt(next_elem.text(), 0, String.fromCharCode(keycode));
-            next_elem.text(next_str);
-            setCaret(next_elem.get(0), 1);
-        }else{
-            let new_str = setCharAt(target.text(), pos, String.fromCharCode(keycode));
-            target.text(new_str);
-            setCaret(target.get(0), pos + 1);
-        }
-    } else if (is_nav){
-        let scroll_elem = null;
-        if (keycode === 37 && pos === 0 && prev_elem.length) {
-            scroll_elem = prev_elem.get(0);
-            setCaret(scroll_elem, 2);}  // left
-        else if (keycode === 37) { return true; }  // left
-        else if (keycode === 39 && pos === 2 && next_elem.length ) {
-            scroll_elem = next_elem.get(0);
-            setCaret(scroll_elem, 0);}  // right
-        else if (keycode === 39){ return true; }
-        else if (keycode === 9 && shift && prev_elem.length) {
-            scroll_elem = prev_elem.get(0);
-            setCaret(scroll_elem, pos);
-        }
-        else if (keycode === 9 && next_elem.length) {
-            scroll_elem = next_elem.get(0);
-            setCaret(scroll_elem, pos);
-        }
-        else if (keycode === 38){
-            let top_elem = $(`#hxc_${index - 16}`);
-            scroll_elem = top_elem.get(0);
-            setCaret(scroll_elem, pos);
-        }
-        else if (keycode === 40){
-            let bot_elem = $(`#hxc_${index + 16}`);
-            scroll_elem = bot_elem.get(0);
-            setCaret(scroll_elem, pos);
-        }
-
-        if (scroll_elem){
-            scroll_elem.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
-        }
-    }
-    return false;
-}
-
-function getCaretPosition(editableDiv) {
-  let caretPos = 0, sel, range;
-  if (window.getSelection) {
-    sel = window.getSelection();
-    if (sel.rangeCount) {
-      range = sel.getRangeAt(0);
-      if (range.commonAncestorContainer.parentNode === editableDiv) {
-        caretPos = range.endOffset;
-      }
-    }
-  } else if (document.selection && document.selection.createRange) {
-    range = document.selection.createRange();
-    if (range.parentElement() === editableDiv) {
-      let tempEl = document.createElement("span");
-      editableDiv.insertBefore(tempEl, editableDiv.firstChild);
-      let tempRange = range.duplicate();
-      tempRange.moveToElementText(tempEl);
-      tempRange.setEndPoint("EndToEnd", range);
-      caretPos = tempRange.text.length;
-    }
-  }
-  return caretPos;
-}
-
-function setCaret(elem, pos)
- {
-    // Creates range object
-    let setpos = document.createRange();
-
-    // Creates object for selection
-    let set = window.getSelection();
-
-    // Set start position of range
-    setpos.setStart(elem.childNodes[0], pos);
-
-    // Collapse range within its boundary points
-    // Returns boolean
-    setpos.collapse(true);
-
-    // Remove all ranges set
-    set.removeAllRanges();
-
-    // Add range with respect to range object.
-    set.addRange(setpos);
-
-    // Set cursor on focus
-    elem.focus();
- }
-
-function setCharAt(str,index,chr) {
-    if(index > str.length-1) return str;
-    return str.substring(0,index) + chr + str.substring(index+1);
 }
