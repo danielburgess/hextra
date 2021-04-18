@@ -1,20 +1,6 @@
 /*
-* Hextra Todo:
-*  - Add selection support
-*  - Store loaded values on the elements and change the background class of cells when values are different than file
-*  - Address conversions built into the editor
-*  - Table support and text viewing
-*  - hex to asm view -- for program views
-*  - categorize different areas of a rom (similar to bookmarking)
-*  - pointer table traversal
-*  - pointer table data block auto-categorization and marking
-*  - exporting/importing of data
-*  - searching by "text" or hexadecimal value
-*  - save most recent searches in history
-*  - project saving
-*  - file diff and comparison
-*  - hextra must be converted to a class
-* */
+* Hextra by DackR
+*/
 
 var hextra_sticky_headers_loaded = false;
 var hextra_prolyfill_loaded = false;
@@ -178,7 +164,7 @@ HextraHelper.setCharAtIndex = function(inString, index, char){
 }
 HextraHelper.toHex = function(number, padding=null) {
     let hex = Number(number).toString(16).toUpperCase();
-    padding = typeof (padding) === "undefined" || padding === null ? padding = 2 : padding;
+    padding = (typeof (padding) === "undefined" || padding === null) ? 2 : padding;
     while (hex.length < padding) {
         hex = "0" + hex;
     }
@@ -189,9 +175,9 @@ class Hextra {
     constructor() {
         this.container = null;
         this.font_min = .5; // in rem units
-        this.font_max = 2.2;
+        this.font_max = 1.3;
         this.min_width = 450; // in pixels
-        this.max_width = 2048;
+        this.max_width = window.screen.width; // now using the window screen width by default
         this.auto_size_steps = 100; // number of steps in the font resize ramp
         this.sticky_headers = true;
         this.default_file_length = 512; // in bytes

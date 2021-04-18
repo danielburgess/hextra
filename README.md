@@ -12,20 +12,23 @@ The focus will initially be on basic features and then will branch out to SNES/S
 ## List of planned features:
 * Add selection support
 * Store loaded values on the elements and change the background class of cells when values are different than file
+* exporting/importing of data
+* searching by "text" or hexadecimal value
+* implement FileSystem API support
+* save most recent searches in history
+* project saving/rom exporting
 * Address conversions built into the editor
 * Table support and text viewing
-* hex to asm view -- for program views
 * categorize different areas of a rom (similar to bookmarking)
 * pointer table traversal
 * pointer table data block auto-categorization and marking
-* exporting/importing of data
-* searching by "text" or hexadecimal value
-* save most recent searches in history
-* project saving/rom exporting
+* ~~hextra main methods must be converted to a class~~ 4/18
+
+## List of potential features:
+* hex to asm view -- for program views
 * customizable script editing components
 * customizable tile editor
 * file diff and comparison
-* ~~hextra main methods must be converted to a class~~ 4/18
 
 
 This work is licensed under a
