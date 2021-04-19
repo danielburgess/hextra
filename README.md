@@ -11,8 +11,9 @@ The focus will initially be on basic features and then will branch out to SNES/S
 
 ## List of planned features:
 * Add selection support
-* Store loaded values on the elements and change the background class of cells when values are different than file
-* exporting/importing of data
+* Store loaded values on the elements and change the background class of cells when values are different from file
+* ~~load files~~ 4/18
+* save files 
 * searching by "text" or hexadecimal value
 * implement FileSystem API support
 * save most recent searches in history

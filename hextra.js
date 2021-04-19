@@ -1,7 +1,7 @@
 /*
 * Hextra by DackR
 */
-
+var hextra_initialized = false;
 var hextra_sticky_headers_loaded = false;
 var hextra_prolyfill_loaded = false;
 var hextra_roboto_loaded = false;
@@ -32,7 +32,8 @@ const hextra_template = `
                           File
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                          <a class="dropdown-item" href="#">Load File</a>
+                          <input class="hextra-file-loader" type="file" style="display: none;" />
+                          <a class="dropdown-item" onclick="HxHlpr.loadFile('{1}')">Load File</a>
                           <a class="dropdown-item" href="#">Load Table</a>
                           <div class="dropdown-divider"></div>
                           <a class="dropdown-item" href="#">Save</a>
@@ -40,7 +41,7 @@ const hextra_template = `
                         </div>
                       </li>
                       <li class="nav-item">
-                        <a class="nav-link" onclick="showhextraAbout()">About</a>
+                        <a class="nav-link" onclick="HxHlpr.showHextraAbout()">About</a>
                       </li>
                     </ul>
                     <div class="form-inline">
@@ -96,34 +97,9 @@ const hextra_row_template = `
   <td id="hxc_{32}" class="hex-col" contenteditable="true">{16}</td>
 </tr>`;
 
-$('head').append(`<link rel="stylesheet" href="hextra-style.css">`);
-
-if (typeof $().emulateTransitionEnd !== 'function') {  // bootstrap is not loaded...
-    $('head').append(`<link rel='stylesheet' 
-        href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css'>`);
-    $.getScript("https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js");
-}
-
-if (typeof bootbox == "undefined") { // load bootbox...
-    $.getScript("https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/5.5.2/bootbox.min.js");
-}
-
-function showhextraAbout(){
-    bootbox.alert({
-        message: `<strong>hextra v0.01 - DackR 2021</strong><br>
-Using the following open source projects:<br>
-<a href="https://github.com/ausi/cq-prolyfill" target="_blank">cq-prolyfill v0.4</a><br>
-<a href="https://github.com/jmosbech/StickyTableHeaders" target="_blank">StickyTableHeaders v0.1.24</a><br>
-<a href="https://github.com/jquery/jquery" target="_blank">jQuery v3.6</a><br>
-<a href="https://github.com/twbs/bootstrap" target="_blank">Twitter Bootstrap v4.6</a><br>
-<a href="https://github.com/makeusabrew/bootbox" target="_blank">Bootbox 5.5.2</a><br>`,
-        backdrop: true
-    });
-}
-
-var HextraHelper = function() {}
+var HxHlpr = function() {}
 // Helper "class" for getting and setting the caret position
-HextraHelper.setCaretPos = function(element, position){
+HxHlpr.setCaretPos = function(element, position){
     let setpos = document.createRange();  // Creates range object
     let set = window.getSelection();  // Creates object for selection
 
@@ -135,7 +111,7 @@ HextraHelper.setCaretPos = function(element, position){
     set.addRange(setpos);  // Add range with respect to range object.
     element.focus();  // Set cursor on focus
 }
-HextraHelper.getCaretPos = function(element){
+HxHlpr.getCaretPos = function(element){
     let caretPos = 0, sel, range;
     if (window.getSelection) {
         sel = window.getSelection();
@@ -148,21 +124,27 @@ HextraHelper.getCaretPos = function(element){
     } else if (document.selection && document.selection.createRange) {
         range = document.selection.createRange();
         if (range.parentElement() === element) {
-            let tempEl = document.createElement("span");
-            element.insertBefore(tempEl, element.firstChild);
-            let tempRange = range.duplicate();
-            tempRange.moveToElementText(tempEl);
-            tempRange.setEndPoint("EndToEnd", range);
-            caretPos = tempRange.text.length;
+            let tmp_elem = document.createElement("span");
+            element.insertBefore(tmp_elem, element.firstChild);
+            let tmp_range = range.duplicate();
+            tmp_range.moveToElementText(tmp_elem);
+            tmp_range.setEndPoint("EndToEnd", range);
+            caretPos = tmp_range.text.length;
         }
     }
     return caretPos;
 }
-HextraHelper.setCharAtIndex = function(inString, index, char){
+HxHlpr.setCharAtIndex = function(inString, index, char){
     if(index > inString.length-1) return inString;
     return inString.substring(0,index) + char + inString.substring(index+1);
 }
-HextraHelper.toHex = function(number, padding=null) {
+HxHlpr.b2S = function(buffer, index){
+    if (buffer.byteLength <= index){
+        return "--";
+    }
+    return HxHlpr.toHex(buffer[index]);
+}
+HxHlpr.toHex = function(number, padding=null) {
     let hex = Number(number).toString(16).toUpperCase();
     padding = (typeof (padding) === "undefined" || padding === null) ? 2 : padding;
     while (hex.length < padding) {
@@ -170,13 +152,73 @@ HextraHelper.toHex = function(number, padding=null) {
     }
     return hex;
 }
+HxHlpr.initialize = function(load_bootstrap=true, load_bootbox=true){
+    if (!hextra_initialized) {  // only happens once
+        hextra_initialized = true;
+        let head_elem = $('head');
+        head_elem.append(`<link rel="stylesheet" href="hextra-style.css">`);
+
+        if (load_bootstrap && typeof $().emulateTransitionEnd !== 'function') {  // bootstrap is not loaded...
+            head_elem.append(`<link rel='stylesheet' 
+        href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css'>`);
+            $.getScript("https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js");
+        }
+
+        if (load_bootbox && typeof bootbox == "undefined") { // load bootbox...
+            $.getScript("https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/5.5.2/bootbox.min.js");
+        }
+    }
+}
+HxHlpr.showHextraAbout = function(){
+    bootbox.alert({
+        message: `<strong>hextra v0.01 - DackR 2021</strong><br>
+Using the following open source projects:<br>
+<a href="https://github.com/ausi/cq-prolyfill" target="_blank">cq-prolyfill v0.4</a><br>
+<a href="https://github.com/jmosbech/StickyTableHeaders" target="_blank">StickyTableHeaders v0.1.24</a><br>
+<a href="https://github.com/jquery/jquery" target="_blank">jQuery v3.6</a><br>
+<a href="https://github.com/twbs/bootstrap" target="_blank">Twitter Bootstrap v4.6</a><br>
+<a href="https://github.com/makeusabrew/bootbox" target="_blank">Bootbox 5.5.2</a><br>`,
+        backdrop: true
+    });
+}
+HxHlpr.loadFile = function(container){
+    $(`${container} .hextra-file-loader`).trigger('click');
+}
+HxHlpr.readFile = function(e, hx_obj){
+    let file = e.target.files[0];
+    hx_obj.filename = file.name;
+    console.log(file.name, "loading...", hx_obj)
+    file.arrayBuffer().then(bfr => {
+        hx_obj.bytes = new Uint8Array(bfr);
+        hx_obj.file_length = hx_obj.length;
+        HxHlpr.showData(hx_obj);
+    });
+}
+HxHlpr.showData = function(hx_obj, start=0, end=5120){
+    let data_rows = '';
+    end = (hx_obj.bytes.length<end) ? hx_obj.bytes.length : end;
+    for (let c=start; c<end; c+=16){
+        data_rows += hextra_row_template.format(HxHlpr.toHex(c, 12),
+            HxHlpr.b2S(hx_obj.bytes, c), HxHlpr.b2S(hx_obj.bytes, c+1),
+            HxHlpr.b2S(hx_obj.bytes, c+2), HxHlpr.b2S(hx_obj.bytes, c+3),
+            HxHlpr.b2S(hx_obj.bytes, c+4), HxHlpr.b2S(hx_obj.bytes, c+5),
+            HxHlpr.b2S(hx_obj.bytes, c+6), HxHlpr.b2S(hx_obj.bytes, c+7),
+            HxHlpr.b2S(hx_obj.bytes, c+8), HxHlpr.b2S(hx_obj.bytes, c+9),
+            HxHlpr.b2S(hx_obj.bytes, c+10), HxHlpr.b2S(hx_obj.bytes, c+11),
+            HxHlpr.b2S(hx_obj.bytes, c+12), HxHlpr.b2S(hx_obj.bytes, c+13),
+            HxHlpr.b2S(hx_obj.bytes, c+14), HxHlpr.b2S(hx_obj.bytes, c+15),
+            c, c+1, c+2, c+3, c+4, c+5, c+6, c+7, c+8, c+9, c+10, c+11, c+12, c+13, c+14, c+15);
+    }
+    $(`${hx_obj.container} .hextra-data-rows`).html(data_rows);
+    console.log("Loaded.", hx_obj.container, data_rows);
+}
 
 class Hextra {
     constructor() {
         this.container = null;
         this.font_min = .5; // in rem units
-        this.font_max = 1.3;
-        this.min_width = 450; // in pixels
+        this.font_max = 2.2;
+        this.min_width = 500; // in pixels
         this.max_width = window.screen.width; // now using the window screen width by default
         this.auto_size_steps = 100; // number of steps in the font resize ramp
         this.sticky_headers = true;
@@ -184,6 +226,8 @@ class Hextra {
         this.dynamic_resize = true;
         this.load_font = true;
         this.delete_value = 0;
+        this.load_boostrap = true;
+        this.load_bootbox = true;
 
         if (arguments.length === 1){
             if (arguments[0].constructor === Object) {
@@ -204,14 +248,18 @@ class Hextra {
         }
         if (this.container == null) throw "hextra Error: The container parameter is required."
 
+        HxHlpr.initialize(this.load_boostrap, this.load_bootbox);
+
+        let container = this.container;
+
         let data_rows = '';
         for (let c=0; c<this.default_file_length; c+=16){
-            data_rows += hextra_row_template.format(HextraHelper.toHex(c, 12),
+            data_rows += hextra_row_template.format(HxHlpr.toHex(c, 12),
                 '00','00','00','00','00','00','00','00','00','00','00','00','00','00','00','00',
                 c, c+1, c+2, c+3, c+4, c+5, c+6, c+7, c+8, c+9, c+10, c+11, c+12, c+13, c+14, c+15);
         }
 
-        $(`${this.container}`).html(hextra_template.format(data_rows));
+        $(`${container}`).html(hextra_template.format(data_rows, container));
 
         if (this.load_font && !hextra_roboto_loaded) {
             hextra_roboto_loaded = true;
@@ -225,7 +273,6 @@ class Hextra {
                 hextra_sticky_headers_loaded = true;
                 $.getScript("https://unpkg.com/sticky-table-headers@0.1.24/js/jquery.stickytableheaders.min.js");
             }
-            let container = this.container;
             setTimeout(function () {
                 $(`${container} .hextra-table`).stickyTableHeaders();
             }, 1000);
@@ -243,6 +290,11 @@ class Hextra {
         // remove the pedantic cell selection code... selection is handled elsewhere. Handle keydown.
         $(`${this.container} .hex-col`).attr('unselectable', 'on')
             .css('user-select', 'none').on('selectstart', false).on('keydown', this.hxKeyDown);
+
+        let this_obj = this;
+        $(`${this.container} .hextra-file-loader`).on('change', function(e){
+            HxHlpr.readFile(e, this_obj);
+        });
     }
 
     hxKeyDown(e) {
@@ -251,7 +303,7 @@ class Hextra {
         let next_elem = $(`#hxc_${index + 1}`);
         let prev_elem = $(`#hxc_${index - 1}`);
         let keycode = e.keyCode;
-        let pos = HextraHelper.getCaretPos(e.target);
+        let pos = HxHlpr.getCaretPos(e.target);
         let shift = e.shiftKey;
         console.log(keycode, e);
 
@@ -263,44 +315,44 @@ class Hextra {
 
         if (is_allowed) {
             if (pos === 2){
-                let next_str = HextraHelper.setCharAtIndex(next_elem.text(), 0, String.fromCharCode(keycode));
+                let next_str = HxHlpr.setCharAtIndex(next_elem.text(), 0, String.fromCharCode(keycode));
                 next_elem.text(next_str);
-                HextraHelper.setCaretPos(next_elem.get(0), 1);
+                HxHlpr.setCaretPos(next_elem.get(0), 1);
             }else{
-                let new_str = HextraHelper.setCharAtIndex(target.text(), pos, String.fromCharCode(keycode));
+                let new_str = HxHlpr.setCharAtIndex(target.text(), pos, String.fromCharCode(keycode));
                 target.text(new_str);
-                HextraHelper.setCaretPos(target.get(0), pos + 1);
+                HxHlpr.setCaretPos(target.get(0), pos + 1);
             }
         } else if (is_nav){
             let scroll_elem = null;
             if (keycode === 37 && pos === 0 && prev_elem.length) {
                 scroll_elem = prev_elem.get(0);
-                HextraHelper.setCaretPos(scroll_elem, 2);}  // left
+                HxHlpr.setCaretPos(scroll_elem, 2);}  // left
             else if (keycode === 37) { return true; }  // left
             else if (keycode === 39 && pos === 2 && next_elem.length ) {
                 scroll_elem = next_elem.get(0);
-                HextraHelper.setCaretPos(scroll_elem, 0);}  // right
+                HxHlpr.setCaretPos(scroll_elem, 0);}  // right
             else if (keycode === 39){ return true; }
             else if (keycode === 9 && shift && prev_elem.length) {
                 scroll_elem = prev_elem.get(0);
-                HextraHelper.setCaretPos(scroll_elem, pos);
+                HxHlpr.setCaretPos(scroll_elem, pos);
             }
             else if (keycode === 9 && next_elem.length) {
                 scroll_elem = next_elem.get(0);
-                HextraHelper.setCaretPos(scroll_elem, pos);
+                HxHlpr.setCaretPos(scroll_elem, pos);
             }
             else if (keycode === 38){ // up keypress
                 let top_elem = $(`#hxc_${index - 16}`);
                 if (top_elem.length) {
                     scroll_elem = top_elem.get(0);
-                    HextraHelper.setCaretPos(scroll_elem, pos);
+                    HxHlpr.setCaretPos(scroll_elem, pos);
                 } else { scroll_elem = e.target; }  // still make sure the current column is visible
             }
             else if (keycode === 40){ // down keypress
                 let bot_elem = $(`#hxc_${index + 16}`);
                 if (bot_elem.length) {
                     scroll_elem = bot_elem.get(0);
-                    HextraHelper.setCaretPos(scroll_elem, pos);
+                    HxHlpr.setCaretPos(scroll_elem, pos);
                 } else { scroll_elem = e.target; }  // make sure the current column is on the screen
             }
             else if(keycode>32&&keycode<37){  // page up/down home/end
